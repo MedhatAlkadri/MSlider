@@ -1,0 +1,2 @@
+# MSlider
+ Wordpress Image Slider
