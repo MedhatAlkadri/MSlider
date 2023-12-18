@@ -1,0 +1,4 @@
+/*remove the list dot*/
+.my-slider li {
+    list-style-type: none;
+}

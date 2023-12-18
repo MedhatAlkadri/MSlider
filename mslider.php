@@ -111,5 +111,12 @@ function my_slider_scripts() {
         '1.0', // Version number
         true // Load in footer
     );
+    // Enqueue the CSS file
+    wp_enqueue_style(
+        'my-slider-css', // Unique handle for your stylesheet
+        plugin_dir_url(__FILE__) . 'css/mslider.css', // Assuming the stylesheet is in a 'css' directory
+        array(), // Dependencies, in this case, none
+        '1.0' // Version number
+    );
 }
 add_action('wp_enqueue_scripts', 'my_slider_scripts');
