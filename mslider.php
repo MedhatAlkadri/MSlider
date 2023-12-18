@@ -73,27 +73,32 @@ function my_slider_shortcode($atts) {
     // Start output buffering
     ob_start();
 
-    // Check if the query returns any posts
-    if ($slides->have_posts()) {
-        // Start a list
-        echo '<ul class="my-slider">';
+   // Check if the query returns any posts
+if ($slides->have_posts()) {
+    // Start a list
+    echo '<div class="swiper-container">';
+    echo '<div class="swiper-wrapper">';
 
-        // Loop through the posts
-        while ($slides->have_posts()) {
-            $slides->the_post();
+    // Loop through the posts
+    while ($slides->have_posts()) {
+        $slides->the_post();
 
-            // Display the post title, content, and featured image
-            echo '<li>';
-            echo '<div class="slide-content">' . get_the_content() . '</div>';
-            if (has_post_thumbnail()) {
-                echo '<div class="slide-image">' . get_the_post_thumbnail() . '</div>';
-            }
-            echo '</li>';
+        // Display the post title, content, and featured image
+        echo '<div class="swiper-slide">';
+        echo '<div class="slide-content">' . get_the_content() . '</div>';
+        if (has_post_thumbnail()) {
+            echo '<div class="slide-image">' . get_the_post_thumbnail() . '</div>';
         }
-
-        // End the list
-        echo '</ul>';
+        echo '</div>';
     }
+
+    // End the list
+    echo '</div>'; // End .swiper-wrapper
+    echo '<div class="swiper-pagination"></div>';
+    echo '<div class="swiper-button-next"></div>';
+    echo '<div class="swiper-button-prev"></div>';
+    echo '</div>'; // End .swiper-container
+}
 
     // Reset post data
     wp_reset_postdata();
@@ -104,13 +109,18 @@ function my_slider_shortcode($atts) {
 add_shortcode('my_slider', 'my_slider_shortcode');
 
 function my_slider_scripts() {
+    // Enqueue the swiperjs
+    wp_enqueue_style('swiper-style', 'https://unpkg.com/swiper/swiper-bundle.min.css');
+    wp_enqueue_script('swiper-script', 'https://unpkg.com/swiper/swiper-bundle.min.js', array(), false, true);
+
     wp_enqueue_script(
         'my-slider', // Unique handle for your script
         plugin_dir_url(__FILE__) . '/js/mslider.js', // Assuming the script is in the root of your theme directory
-        array('jquery'), // Dependencies, in this case, jQuery
+        array('jquery', 'swiper-script'), // Dependencies, in this case, jQuery and swiper-script
         '1.0', // Version number
         true // Load in footer
     );
+
     // Enqueue the CSS file
     wp_enqueue_style(
         'my-slider-css', // Unique handle for your stylesheet

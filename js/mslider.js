@@ -1,9 +1,27 @@
+document.addEventListener('DOMContentLoaded', (event) => {
+    var swiper = new Swiper('.swiper-container', {
+        // Optional parameters
+        direction: 'horizontal',
+        loop: true,
+        autoplay: {
+            delay: 2500,
+            disableOnInteraction: false,
+        },
 
-jQuery(document).ready(function ($) {
-    $('.my-slider li:gt(0)').hide();
-    setInterval(function () {
-        $('.my-slider li:first').fadeOut(1000, function () {
-            $(this).next().fadeIn(1000).end().appendTo('.my-slider');
-        });
-    }, 3000);
+        // If we need pagination
+        pagination: {
+            el: '.swiper-pagination',
+        },
+
+        // Navigation arrows
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+
+        // And if we need scrollbar
+        scrollbar: {
+            el: '.swiper-scrollbar',
+        },
+    });
 });
