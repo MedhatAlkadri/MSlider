@@ -24,6 +24,7 @@ add_action('init', 'my_slider_post_type');
 function my_slide_post_type() {
     register_post_type('my_slide',
         array(
+            'supports' => array('title', 'thumbnail'),
             'labels'      => array(
                 'name'          => __('Slides', 'textdomain'),
                 'singular_name' => __('Slide', 'textdomain'),
@@ -45,6 +46,7 @@ function my_slide_meta_callback($post) {
     $slider_id = get_post_meta($post->ID, '_my_slide_slider_id', true);
     echo '<input type="number" name="my_slide_slider_id" value="' . esc_attr($slider_id) . '">';
 }
+
 
 // Add a meta box for the slide image width when editing a slider post
 function mslider_add_meta_boxes() {
