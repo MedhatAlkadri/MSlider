@@ -47,6 +47,7 @@ function my_slide_meta_callback($post) {
     echo '<input type="number" name="my_slide_slider_id" value="' . esc_attr($slider_id) . '">';
 }
 
+
 // Add a meta box for the slide image width when editing a slider post
 function mslider_add_meta_boxes() {
     add_meta_box(

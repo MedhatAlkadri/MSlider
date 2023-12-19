@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     var swiper = new Swiper('.swiper-container', {
         // Optional parameters
+        effect: 'fade',
         direction: 'horizontal',
         loop: true,
         autoplay: {
