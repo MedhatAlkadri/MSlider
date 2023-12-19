@@ -35,6 +35,7 @@ function my_slide_post_type() {
 }
 add_action('init', 'my_slide_post_type');
 
+
 function my_slide_meta_box() {
     add_meta_box('my_slide_meta', 'Slider ID', 'my_slide_meta_callback', 'my_slide', 'side', 'default');
 }
@@ -45,19 +46,47 @@ function my_slide_meta_callback($post) {
     echo '<input type="number" name="my_slide_slider_id" value="' . esc_attr($slider_id) . '">';
 }
 
-function my_slide_save_postdata($post_id) {
-    if (array_key_exists('my_slide_slider_id', $_POST)) {
+// Add a meta box for the slide image width when editing a slider post
+function mslider_add_meta_boxes() {
+    add_meta_box(
+        'mslider_image_width', // ID
+        'Slide Image Width', // Title
+        'mslider_image_width_meta_box_callback', // Callback
+        'my_slider', // Post type
+        'side', // Context
+        'default' // Priority
+    );
+}
+add_action('add_meta_boxes', 'mslider_add_meta_boxes');
+
+// Output the HTML for the slide image width meta box
+function mslider_image_width_meta_box_callback($post) {
+    wp_nonce_field(basename(__FILE__), 'mslider_nonce');
+    $slide_image_width = get_post_meta($post->ID, '_mslider_image_width', true);
+    echo '<input type="number" id="mslider_image_width" name="mslider_image_width" value="' . esc_attr($slide_image_width) . '" />';
+}
+
+// Save the slide image width when the post is saved
+function mslider_save_postdata($post_id) {
+    // Verify nonce
+    if (!isset($_POST['mslider_nonce']) || !wp_verify_nonce($_POST['mslider_nonce'], basename(__FILE__))) {
+        return $post_id;
+    }
+
+    // Check if our custom field is being saved
+    if (isset($_POST['mslider_image_width'])) {
         update_post_meta(
             $post_id,
-            '_my_slide_slider_id',
-            $_POST['my_slide_slider_id']
+            '_mslider_image_width',
+            $_POST['mslider_image_width']
         );
     }
 }
-add_action('save_post', 'my_slide_save_postdata');
+add_action('save_post', 'mslider_save_postdata');
 
 function my_slider_shortcode($atts) {
     $slider_id = $atts['id'];
+    $slide_image_width = get_post_meta($slider_id, '_mslider_image_width', true);
     $args = array(
         'post_type' => 'my_slide',
         'meta_query' => array(
@@ -68,40 +97,35 @@ function my_slider_shortcode($atts) {
             )
         )
     );
+
     $slides = new WP_Query($args);
 
     // Start output buffering
     ob_start();
 
-   // Check if the query returns any posts
-if ($slides->have_posts()) {
-    // Start a list
-    echo '<div class="swiper-container">';
-    echo '<div class="swiper-wrapper">';
+    // Check if the query returns any posts
+    if ($slides->have_posts()) {
+        // Start a list
+        echo '<div class="swiper-container">';
+        echo '<div class="swiper-wrapper">';
 
-    // Loop through the posts
-    while ($slides->have_posts()) {
-        $slides->the_post();
+        // Loop through the posts
+        while ($slides->have_posts()) {
+            $slides->the_post();
 
-        // Display the post title, content, and featured image
-        echo '<div class="swiper-slide">';
-        echo '<div class="slide-content">' . get_the_content() . '</div>';
-        if (has_post_thumbnail()) {
-            echo '<div class="slide-image">' . get_the_post_thumbnail() . '</div>';
+            // Get the slide image URL
+            $slide_image_url = get_the_post_thumbnail_url();
+
+            // Display the slide image with the specified width and the post content
+            echo '<div class="swiper-slide">';
+            echo '<img style="width: ' . esc_attr($slide_image_width) . 'px;" src="' . esc_url($slide_image_url) . '" />';
+            echo '<div class="slide-content">' . get_the_content() . '</div>';
+            echo '</div>';
         }
+
+        echo '</div>';
         echo '</div>';
     }
-
-    // End the list
-    echo '</div>'; // End .swiper-wrapper
-    echo '<div class="swiper-pagination"></div>';
-    echo '<div class="swiper-button-next"></div>';
-    echo '<div class="swiper-button-prev"></div>';
-    echo '</div>'; // End .swiper-container
-}
-
-    // Reset post data
-    wp_reset_postdata();
 
     // Return the buffered output
     return ob_get_clean();
