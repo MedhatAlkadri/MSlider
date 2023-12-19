@@ -24,6 +24,7 @@ add_action('init', 'my_slider_post_type');
 function my_slide_post_type() {
     register_post_type('my_slide',
         array(
+            'supports' => array('title', 'thumbnail'),
             'labels'      => array(
                 'name'          => __('Slides', 'textdomain'),
                 'singular_name' => __('Slide', 'textdomain'),
