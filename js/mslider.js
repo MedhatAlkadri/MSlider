@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     var swiper = new Swiper('.swiper-container', {
         // Optional parameters
-        effect: 'fade',
+        effect: mslider_params.effect, // Use the effect from the mslider_params object
         direction: 'horizontal',
         loop: true,
         autoplay: {
