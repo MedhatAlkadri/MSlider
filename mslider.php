@@ -7,9 +7,10 @@ Author: Medhat Alkadri
 Author URI: https://medhatalkadry.com
 */
 
-function my_slider_post_type() {
-    register_post_type('my_slider',
+function mslider_post_type() {
+    register_post_type('mslider',
         array(
+            'supports' => array('title'),
             'labels'      => array(
                 'name'          => __('Sliders', 'textdomain'),
                 'singular_name' => __('Slider', 'textdomain'),
@@ -19,10 +20,10 @@ function my_slider_post_type() {
         )
     );
 }
-add_action('init', 'my_slider_post_type');
+add_action('init', 'mslider_post_type');
 
-function my_slide_post_type() {
-    register_post_type('my_slide',
+function mslide_post_type() {
+    register_post_type('mslide',
         array(
             'supports' => array('title', 'thumbnail'),
             'labels'      => array(
@@ -34,32 +35,59 @@ function my_slide_post_type() {
         )
     );
 }
-add_action('init', 'my_slide_post_type');
+add_action('init', 'mslide_post_type');
 
 
-function my_slide_meta_box() {
-    add_meta_box('my_slide_meta', 'Slider ID', 'my_slide_meta_callback', 'my_slide', 'side', 'default');
+function mslide_meta_box() {
+    add_meta_box('mslide_meta', 'Slider ID', 'mslide_meta_callback', 'mslide', 'side', 'default');
 }
-add_action('add_meta_boxes', 'my_slide_meta_box');
+add_action('add_meta_boxes', 'mslide_meta_box');
 
-function my_slide_meta_callback($post) {
-    $slider_id = get_post_meta($post->ID, '_my_slide_slider_id', true);
-    echo '<input type="number" name="my_slide_slider_id" value="' . esc_attr($slider_id) . '">';
+function mslide_meta_callback($post) {
+    wp_nonce_field(basename(__FILE__), 'mslide_nonce');
+    $mslide_slider_id = get_post_meta($post->ID, '_mslide_slider_id', true);
+    echo '<input type="text" id="mslide_slider_id" name="mslide_slider_id" value="' . esc_attr($mslide_slider_id) . '" />';
+
 }
 
 
-// Add a meta box for the slide image width when editing a slider post
+// Add meta boxes for the slide image width and slider effect when editing a slider post
 function mslider_add_meta_boxes() {
+    // Meta box for Slide Image Width
     add_meta_box(
         'mslider_image_width', // ID
         'Slide Image Width', // Title
         'mslider_image_width_meta_box_callback', // Callback
-        'my_slider', // Post type
+        'mslider', // Post type
+        'side', // Context
+        'default' // Priority
+    );
+
+    // Meta box for Slider Effect
+    add_meta_box(
+        'mslider_effect', // Unique ID
+        'Slider Effect', // Box title
+        'mslider_meta_box_html', // Content callback
+        'mslider', // Post type
         'side', // Context
         'default' // Priority
     );
 }
 add_action('add_meta_boxes', 'mslider_add_meta_boxes');
+
+
+//Display the Custom Field (Field slider effect)
+function mslider_meta_box_html($post) {
+    $value = get_post_meta($post->ID, '_mslider_effect', true);
+    echo '<select id="mslider_effect" name="mslider_effect">';
+    echo '<option value="slide"' . selected($value, 'slide', false) . '>Slide</option>';
+    echo '<option value="fade"' . selected($value, 'fade', false) . '>Fade</option>';
+    echo '<option value="cube"' . selected($value, 'cube', false) . '>cube</option>';
+    echo '<option value="coverflow"' . selected($value, 'coverflow', false) . '>coverflow</option>';
+    echo '<option value="flip"' . selected($value, 'flip', false) . '>flip</option>';
+    // Add other effects as needed...
+    echo '</select>';
+}
 
 // Output the HTML for the slide image width meta box
 function mslider_image_width_meta_box_callback($post) {
@@ -68,12 +96,38 @@ function mslider_image_width_meta_box_callback($post) {
     echo '<input type="number" id="mslider_image_width" name="mslider_image_width" value="' . esc_attr($slide_image_width) . '" />';
 }
 
+
+//save slider id in slide post type
+function mslide_save_postdata($post_id) {
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything.
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Verify nonce
+    if (!isset($_POST['mslide_nonce']) || !wp_verify_nonce($_POST['mslide_nonce'], basename(__FILE__))) {
+        return $post_id;
+    }
+
+    // Save slider id in slide post type
+    if (array_key_exists('mslide_slider_id', $_POST)) {
+        update_post_meta(
+            $post_id,
+            '_mslide_slider_id',
+            $_POST['mslide_slider_id']
+        );
+    }
+}
+add_action('save_post', 'mslide_save_postdata');
+
 // Save the slide image width when the post is saved
 function mslider_save_postdata($post_id) {
     // Verify nonce
     if (!isset($_POST['mslider_nonce']) || !wp_verify_nonce($_POST['mslider_nonce'], basename(__FILE__))) {
         return $post_id;
     }
+
+
 
     // Check if our custom field is being saved
     if (isset($_POST['mslider_image_width'])) {
@@ -83,17 +137,26 @@ function mslider_save_postdata($post_id) {
             $_POST['mslider_image_width']
         );
     }
+//Save the Custom Field Value (Field slider effect)
+if (array_key_exists('mslider_effect', $_POST)) {
+    update_post_meta(
+        $post_id,
+        '_mslider_effect',
+        $_POST['mslider_effect']
+    );
+}
 }
 add_action('save_post', 'mslider_save_postdata');
 
-function my_slider_shortcode($atts) {
+function mslider_shortcode($atts) {
     $slider_id = $atts['id'];
+    $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
     $slide_image_width = get_post_meta($slider_id, '_mslider_image_width', true);
     $args = array(
-        'post_type' => 'my_slide',
+        'post_type' => 'mslide',
         'meta_query' => array(
             array(
-                'key' => '_my_slide_slider_id',
+                'key' => '_mslide_slider_id',
                 'value' => $slider_id,
                 'compare' => '=',
             )
@@ -101,6 +164,25 @@ function my_slider_shortcode($atts) {
     );
 
     $slides = new WP_Query($args);
+
+    function mslider_enqueue_scripts() {
+        global $post;
+    
+        if ($post && has_shortcode($post->post_content, 'mslider')) {
+            // Extract the slider ID from the shortcode attributes
+            preg_match('/mslider id="(\d+)"/', $post->post_content, $matches);
+            $slider_id = $matches[1];
+    
+            $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
+    
+            wp_enqueue_script('mslider', plugins_url('mslider.js', __FILE__), array('jquery'), '1.0', true);
+            wp_localize_script('mslider', 'mslider_params', array(
+                'effect' => $slider_effect,
+            ));
+        }
+    }
+    add_action('wp_enqueue_scripts', 'mslider_enqueue_scripts');
+
 
     // Start output buffering
     ob_start();
@@ -132,15 +214,15 @@ function my_slider_shortcode($atts) {
     // Return the buffered output
     return ob_get_clean();
 }
-add_shortcode('my_slider', 'my_slider_shortcode');
+add_shortcode('mslider', 'mslider_shortcode');
 
-function my_slider_scripts() {
+function mslider_scripts() {
     // Enqueue the swiperjs
     wp_enqueue_style('swiper-style', 'https://unpkg.com/swiper/swiper-bundle.min.css');
     wp_enqueue_script('swiper-script', 'https://unpkg.com/swiper/swiper-bundle.min.js', array(), false, true);
 
     wp_enqueue_script(
-        'my-slider', // Unique handle for your script
+        'mslider', // Unique handle for your script
         plugin_dir_url(__FILE__) . '/js/mslider.js', // Assuming the script is in the root of your theme directory
         array('jquery', 'swiper-script'), // Dependencies, in this case, jQuery and swiper-script
         '1.0', // Version number
@@ -149,10 +231,10 @@ function my_slider_scripts() {
 
     // Enqueue the CSS file
     wp_enqueue_style(
-        'my-slider-css', // Unique handle for your stylesheet
+        'mslider-css', // Unique handle for your stylesheet
         plugin_dir_url(__FILE__) . 'css/mslider.css', // Assuming the stylesheet is in a 'css' directory
         array(), // Dependencies, in this case, none
         '1.0' // Version number
     );
 }
-add_action('wp_enqueue_scripts', 'my_slider_scripts');
+add_action('wp_enqueue_scripts', 'mslider_scripts');
