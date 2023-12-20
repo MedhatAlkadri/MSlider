@@ -2,7 +2,7 @@
 /*
 Plugin Name: MSlider
 Description: A simple image slider plugin
-Version: 1.0
+Version: 1.4
 Author: Medhat Alkadri
 Author URI: https://medhatalkadry.com
 */
@@ -78,16 +78,36 @@ add_action('add_meta_boxes', 'mslider_add_meta_boxes');
 
 //Display the Custom Field (Field slider effect)
 function mslider_meta_box_html($post) {
+    $effect_value = get_post_meta($post->ID, '_mslider_effect', true);
+    $speed_value = get_post_meta($post->ID, '_mslider_speed', true);
+    $delay_value = get_post_meta($post->ID, '_mslider_delay', true);
     $value = get_post_meta($post->ID, '_mslider_effect', true);
+
+    echo '<div class= "mslider_effect_container">';
+    echo '<label for="mslider_effect">Effect:</label>';
     echo '<select id="mslider_effect" name="mslider_effect">';
     echo '<option value="slide"' . selected($value, 'slide', false) . '>Slide</option>';
     echo '<option value="fade"' . selected($value, 'fade', false) . '>Fade</option>';
     echo '<option value="cube"' . selected($value, 'cube', false) . '>cube</option>';
     echo '<option value="coverflow"' . selected($value, 'coverflow', false) . '>coverflow</option>';
     echo '<option value="flip"' . selected($value, 'flip', false) . '>flip</option>';
-    // Add other effects as needed...
     echo '</select>';
+    echo '</div>';
+    
+    // New speed field
+    echo '<div class= "mslider_effect_container">';
+    echo '<label for="mslider_speed">Speed:</label>';
+    echo '<input type="number" id="mslider_speed" name="mslider_speed" value="' . esc_attr($speed_value) . '">';
+    echo '</div>';
+
+    
+    // New delay field
+    echo '<div class= "mslider_effect_container">';
+    echo '<label for="mslider_delay">Delay:</label>';
+    echo '<input type="number" id="mslider_delay" name="mslider_delay" value="' . esc_attr($delay_value) . '">';
+    echo '</div>';
 }
+
 
 // Output the HTML for the slide image width meta box
 function mslider_image_width_meta_box_callback($post) {
@@ -126,9 +146,6 @@ function mslider_save_postdata($post_id) {
     if (!isset($_POST['mslider_nonce']) || !wp_verify_nonce($_POST['mslider_nonce'], basename(__FILE__))) {
         return $post_id;
     }
-
-
-
     // Check if our custom field is being saved
     if (isset($_POST['mslider_image_width'])) {
         update_post_meta(
@@ -143,6 +160,24 @@ if (array_key_exists('mslider_effect', $_POST)) {
         $post_id,
         '_mslider_effect',
         $_POST['mslider_effect']
+    );
+}
+
+// Save the slider speed
+if (isset($_POST['mslider_speed'])) {
+    update_post_meta(
+        $post_id,
+        '_mslider_speed',
+        $_POST['mslider_speed']
+    );
+}
+
+// Save the slider delay
+if (isset($_POST['mslider_delay'])) {
+    update_post_meta(
+        $post_id,
+        '_mslider_delay',
+        $_POST['mslider_delay']
     );
 }
 }
@@ -180,6 +215,15 @@ function mslider_shortcode($atts) {
                 'effect' => $slider_effect,
             ));
         }
+
+        $slider_speed = get_post_meta($slider_id, '_mslider_speed', true);
+$slider_delay = get_post_meta($slider_id, '_mslider_delay', true);
+
+wp_localize_script('mslider', 'mslider_params', array(
+    'effect' => $slider_effect,
+    'speed' => $slider_speed,
+    'delay' => $slider_delay,
+));
     }
     add_action('wp_enqueue_scripts', 'mslider_enqueue_scripts');
 
@@ -238,3 +282,9 @@ function mslider_scripts() {
     );
 }
 add_action('wp_enqueue_scripts', 'mslider_scripts');
+
+// add CSS to Admin
+function mslider_admin_scripts() {
+    wp_enqueue_style('mslider', plugin_dir_url(__FILE__) . 'css/mslider.css');
+}
+add_action('admin_enqueue_scripts', 'mslider_admin_scripts');

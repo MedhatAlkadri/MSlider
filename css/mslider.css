@@ -1,0 +1,18 @@
+.mslider_effect_container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.mslider_effect_container label {
+    flex-basis: 30%;
+    text-align: center;
+}
+
+.mslider_effect_container select,
+.mslider_effect_container input {
+    flex-basis: 70%;
+    width: 100%;
+    box-sizing: border-box;
+}
