@@ -1,30 +1,17 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    var swiper = new Swiper('.swiper-container', {
-        // Optional parameters
-        effect: mslider_params.effect, // Use the effect from the mslider_params object
-        // Use the speed and delay from the mslider_params object
-        speed: mslider_params.speed,
-        direction: 'horizontal',
-        loop: true,
-        autoplay: {
-            delay: mslider_params.delay,
-            disableOnInteraction: false,
-        },
-
-        // If we need pagination
-        pagination: {
-            el: '.swiper-pagination',
-        },
-
-        // Navigation arrows
-        navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
-        },
-
-        // And if we need scrollbar
-        scrollbar: {
-            el: '.swiper-scrollbar',
-        },
-    });
+    // Loop through each slider
+    for (var slider_id in mslider_params) {
+        // Get the parameters for this slider
+        var params = mslider_params[slider_id];
+        console.log(mslider_params);
+        // Initialize the slider with these parameters
+        var swiper = new Swiper('#slider-' + slider_id, {
+            direction: 'horizontal',
+            effect: params.effect,
+            speed: parseInt(params.speed),
+            autoplay: {
+                delay: parseInt(params.delay),
+            },
+        });
+    }
 });

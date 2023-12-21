@@ -183,8 +183,65 @@ if (isset($_POST['mslider_delay'])) {
 }
 add_action('save_post', 'mslider_save_postdata');
 
+function mslider_enqueue_scripts() {
+    global $post;
+    
+    // Array to store the slider IDs
+    $slider_ids = array();
+ 
+    if ($post && has_shortcode($post->post_content, 'mslider')) {
+        // Extract the slider IDs from the shortcodes
+        preg_match_all('/mslider id="(\d+(?:,\d+)*)"/', $post->post_content, $matches);
+        
+        // Loop through all matches and add all slider IDs to the array
+        foreach ($matches[1] as $match) {
+            $ids = explode(',', $match);
+            $slider_ids = array_merge($slider_ids, $ids);
+        }
+    }
+
+    // Check if $slider_ids is an array before the foreach loop
+    if (is_array($slider_ids)) {
+        // Loop through each slider ID
+        foreach ($slider_ids as $slider_id) {
+            // Query for all slides that have this slider ID in their meta box
+            $args = array(
+                'post_type' => 'slide', // Adjust this to match your slide post type
+                'meta_query' => array(
+                    array(
+                        'key' => 'slider_id', // Adjust this to match your meta box key
+                        'value' => $slider_id,
+                        'compare' => 'LIKE', // This will search for the slider ID in the slide's meta box
+                    ),
+                ),
+            );
+            $slides = get_posts($args);
+
+            // Loop through each slide
+            foreach ($slides as $slide) {
+                $slider_effect = get_post_meta($slide->ID, '_mslider_effect', true);
+                $slider_speed = get_post_meta($slide->ID, '_mslider_speed', true);
+                $slider_delay = get_post_meta($slide->ID, '_mslider_delay', true);
+ 
+                wp_enqueue_script('mslider', plugins_url('js/mslider.js', __FILE__), array('jquery'), '1.0', true);
+                wp_localize_script('mslider', 'mslider_params', array(
+                    'effect' => $slider_effect,
+                    'speed' => $slider_speed,
+                    'delay' => $slider_delay,
+                ));
+            }
+        }
+    }
+}
+add_action('wp_enqueue_scripts', 'mslider_enqueue_scripts');
+
+
 function mslider_shortcode($atts) {
-    $slider_id = $atts['id'];
+   
+    $atts = shortcode_atts(array(
+        'id' => '',
+    ), $atts);
+     $slider_id = $atts['id'];
     $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
     $slide_image_width = get_post_meta($slider_id, '_mslider_image_width', true);
     $args = array(
@@ -200,32 +257,6 @@ function mslider_shortcode($atts) {
 
     $slides = new WP_Query($args);
 
-    function mslider_enqueue_scripts() {
-        global $post;
-    
-        if ($post && has_shortcode($post->post_content, 'mslider')) {
-            // Extract the slider ID from the shortcode attributes
-            preg_match('/mslider id="(\d+)"/', $post->post_content, $matches);
-            $slider_id = $matches[1];
-    
-            $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
-    
-            wp_enqueue_script('mslider', plugins_url('mslider.js', __FILE__), array('jquery'), '1.0', true);
-            wp_localize_script('mslider', 'mslider_params', array(
-                'effect' => $slider_effect,
-            ));
-        }
-
-        $slider_speed = get_post_meta($slider_id, '_mslider_speed', true);
-$slider_delay = get_post_meta($slider_id, '_mslider_delay', true);
-
-wp_localize_script('mslider', 'mslider_params', array(
-    'effect' => $slider_effect,
-    'speed' => $slider_speed,
-    'delay' => $slider_delay,
-));
-    }
-    add_action('wp_enqueue_scripts', 'mslider_enqueue_scripts');
 
 
     // Start output buffering
@@ -234,7 +265,8 @@ wp_localize_script('mslider', 'mslider_params', array(
     // Check if the query returns any posts
     if ($slides->have_posts()) {
         // Start a list
-        echo '<div class="swiper-container">';
+          // Output the slider container with the ID
+    echo '<div id="slider-' . esc_attr($slider_id) . '" class="swiper-container">';;
         echo '<div class="swiper-wrapper">';
 
         // Loop through the posts
@@ -261,28 +293,59 @@ wp_localize_script('mslider', 'mslider_params', array(
 add_shortcode('mslider', 'mslider_shortcode');
 
 function mslider_scripts() {
-    // Enqueue the swiperjs
-    wp_enqueue_style('swiper-style', 'https://unpkg.com/swiper/swiper-bundle.min.css');
-    wp_enqueue_script('swiper-script', 'https://unpkg.com/swiper/swiper-bundle.min.js', array(), false, true);
+    // Check if the current post/page contains the mslider shortcode
+    global $post;
+    if ($post && has_shortcode($post->post_content, 'mslider')) {
+        // Enqueue the swiperjs
+        wp_enqueue_style('swiper-style', 'https://unpkg.com/swiper/swiper-bundle.min.css');
+        wp_enqueue_script('swiper-script', 'https://unpkg.com/swiper/swiper-bundle.min.js', array(), false, true);
 
-    wp_enqueue_script(
-        'mslider', // Unique handle for your script
-        plugin_dir_url(__FILE__) . '/js/mslider.js', // Assuming the script is in the root of your theme directory
-        array('jquery', 'swiper-script'), // Dependencies, in this case, jQuery and swiper-script
-        '1.0', // Version number
-        true // Load in footer
-    );
+        wp_enqueue_script(
+            'mslider', // Unique handle for your script
+            plugin_dir_url(__FILE__) . 'js/mslider.js', // Assuming the script is in the root of your theme directory
+            array('jquery', 'swiper-script'), // Dependencies, in this case, jQuery and swiper-script
+            '1.0', // Version number
+            true // Load in footer
+        );
 
-    // Enqueue the CSS file
-    wp_enqueue_style(
-        'mslider-css', // Unique handle for your stylesheet
-        plugin_dir_url(__FILE__) . 'css/mslider.css', // Assuming the stylesheet is in a 'css' directory
-        array(), // Dependencies, in this case, none
-        '1.0' // Version number
-    );
+        // Get the slider IDs from the shortcode
+        preg_match_all('/mslider id="(\d+(?:,\d+)*)"/', $post->post_content, $matches);
+        $slider_ids = array();
+        foreach ($matches[1] as $match) {
+            $ids = explode(',', $match);
+            $slider_ids = array_merge($slider_ids, $ids);
+        }
+
+        // Initialize an array to hold all slider parameters
+        $all_slider_params = array();
+
+        // Loop through each slider ID
+        foreach ($slider_ids as $slider_id) {
+            $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
+            $slider_speed = get_post_meta($slider_id, '_mslider_speed', true);
+            $slider_delay = get_post_meta($slider_id, '_mslider_delay', true);
+
+            // Add this slider's parameters to the array
+            $all_slider_params[$slider_id] = array(
+                'effect' => $slider_effect,
+                'speed' => $slider_speed,
+                'delay' => $slider_delay,
+            );
+        }
+
+        // Localize the mslider_params object to your script
+        wp_localize_script('mslider', 'mslider_params', $all_slider_params);
+
+        // Enqueue the CSS file
+        wp_enqueue_style(
+            'mslider-css', // Unique handle for your stylesheet
+            plugin_dir_url(__FILE__) . 'css/mslider.css', // Assuming the stylesheet is in a 'css' directory
+            array(), // Dependencies, in this case, none
+            '1.0' // Version number
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'mslider_scripts');
-
 // add CSS to Admin
 function mslider_admin_scripts() {
     wp_enqueue_style('mslider', plugin_dir_url(__FILE__) . 'css/mslider.css');
