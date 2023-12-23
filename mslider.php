@@ -223,12 +223,17 @@ function mslider_enqueue_scripts() {
                 $slider_speed = get_post_meta($slide->ID, '_mslider_speed', true);
                 $slider_delay = get_post_meta($slide->ID, '_mslider_delay', true);
  
-                wp_enqueue_script('mslider', plugins_url('js/mslider.js', __FILE__), array('jquery'), '1.0', true);
-                wp_localize_script('mslider', 'mslider_params', array(
-                    'effect' => $slider_effect,
-                    'speed' => $slider_speed,
-                    'delay' => $slider_delay,
-                ));
+                 // Enqueue your script
+    wp_enqueue_script('mslider-script', plugins_url('js/mslider.js', __FILE__), array('jquery'), '1.0', true);
+
+    // Localize the script with your data
+    $slider_params = array(
+        'effect' => $slider_effect,
+        'speed' => $slider_speed,
+        'delay' => $slider_delay,
+    );
+    wp_localize_script('mslider-script', 'mslider_params', $slider_params);
+
             }
         }
     }
@@ -238,12 +243,16 @@ add_action('wp_enqueue_scripts', 'mslider_enqueue_scripts');
 
 function mslider_shortcode($atts) {
    
-    $atts = shortcode_atts(array(
-        'id' => '',
-    ), $atts);
-     $slider_id = $atts['id'];
-    $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
-    $slide_image_width = get_post_meta($slider_id, '_mslider_image_width', true);
+   
+        $atts = shortcode_atts(array(
+            'id' => '',
+        ), $atts);
+        $slider_id = $atts['id'];
+        $slider_effect = get_post_meta($slider_id, '_mslider_effect', true);
+        $slider_speed = get_post_meta($slider_id, '_mslider_speed', true); // Retrieve speed
+        $slider_delay = get_post_meta($slider_id, '_mslider_delay', true); // Retrieve delay
+        $slide_image_width = get_post_meta($slider_id, '_mslider_image_width', true);
+    
     $args = array(
         'post_type' => 'mslide',
         'meta_query' => array(
@@ -393,7 +402,15 @@ add_action('quick_edit_custom_box', 'mslide_quick_edit_custom_fields', 10, 2);
 // Save the slider ID from quick edit
 function mslide_save_quick_edit_data($post_id) {
     if (isset($_REQUEST['mslide_slider_id'])) {
-        update_post_meta($post_id, '_mslide_slider_id', sanitize_text_field($_REQUEST['mslide_slider_id']));
+        $slider_id = sanitize_text_field($_REQUEST['mslide_slider_id']);
+
+        // Check if the entered value is a single, valid ID
+        if (preg_match('/^\d+$/', $slider_id)) {
+            update_post_meta($post_id, '_mslide_slider_id', $slider_id);
+        } else {
+            // If the entered value is not a valid ID, return early without updating the post meta
+            return;
+        }
     }
 }
 add_action('save_post_mslide', 'mslide_save_quick_edit_data');
