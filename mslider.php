@@ -351,3 +351,49 @@ function mslider_admin_scripts() {
     wp_enqueue_style('mslider', plugin_dir_url(__FILE__) . 'css/mslider.css');
 }
 add_action('admin_enqueue_scripts', 'mslider_admin_scripts');
+
+
+
+//admin slides list
+
+// Modify the columns in the slides list table
+function mslide_edit_columns($columns) {
+    $columns['slider_id'] = 'Slider ID';
+    return $columns;
+}
+add_filter('manage_mslide_posts_columns', 'mslide_edit_columns');
+
+// Display the slider ID in the slides list table
+function mslide_custom_column($column, $post_id) {
+    if ($column === 'slider_id') {
+        $slider_id = get_post_meta($post_id, '_mslide_slider_id', true);
+        echo $slider_id;
+    }
+}
+add_action('manage_mslide_posts_custom_column', 'mslide_custom_column', 10, 2);
+
+
+// Add custom input field for slider ID in quick edit form
+function mslide_quick_edit_custom_fields() {
+    ?>
+    <fieldset class="inline-edit-col-left">
+        <div class="inline-edit-col">
+            <label>
+                <span class="title">Slider ID</span>
+                <span class="input-text-wrap">
+                    <input type="text" name="mslide_slider_id" class="mslide-slider-id" value="">
+                </span>
+            </label>
+        </div>
+    </fieldset>
+    <?php
+}
+add_action('quick_edit_custom_box', 'mslide_quick_edit_custom_fields', 10, 2);
+
+// Save the slider ID from quick edit
+function mslide_save_quick_edit_data($post_id) {
+    if (isset($_REQUEST['mslide_slider_id'])) {
+        update_post_meta($post_id, '_mslide_slider_id', sanitize_text_field($_REQUEST['mslide_slider_id']));
+    }
+}
+add_action('save_post_mslide', 'mslide_save_quick_edit_data');
