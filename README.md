@@ -1,29 +1,25 @@
-# MSlider
+# MSlider V2
 
-MSlider is a WordPress plugin that allows you to create beautiful, responsive sliders using the Swiper.js library.
+MSlider is a simple, easy-to-use WordPress plugin that allows you to create and manage image sliders on your website.
+
+## Requirements
+
+- PHP 7.0 or higher
 
 ## Features
 
-- Create sliders with customizable settings in the slider post
-- Customize the slider effect, speed, and delay
-- Responsive design works on all devices
-
-## Installation
-
-1. Upload the `mslider` directory to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Use the `[mslider]` shortcode in your posts or pages to display a slider
+- **Custom Post Types**: MSlider introduces two new custom post types - 'mslider' and 'mslide'. The 'mslider' post type is used to create and manage different sliders, while the 'mslide' post type is used to create and manage the individual slides within each slider.
+- **Support for Titles and Thumbnails**: The 'mslide' post type supports both titles and thumbnails, allowing you to give each slide a name and an image.
+- **Meta Box for Slider ID**: MSlider adds a meta box to the 'mslide' post type edit screen, where you can enter the ID of the slider that the slide belongs to.
+- **Slider Effects**: MSlider supports various transition effects for the slides. You can choose from fade, slide, cube, flip, and more to give your sliders a unique look and feel.
 
 ## Usage
 
-To display a slider, use the `[mslider]` shortcode in your post or page. The settings for the slider (effect, speed, delay) can be customized in the slider post.
+1. **Create a Slider**: Go to the WordPress admin area, click on 'Sliders' in the left-hand menu, and then click on 'Add New'. Give your slider a title and then click 'Publish'.
+2. **Get the Slider ID**: After publishing the slider, you can find the ID of the slider in the URL of the edit page. The URL will look something like this: `http://yourwebsite.com/wp-admin/post.php?post=123&action=edit`. In this case, '123' is the ID of the slider.
+3. **Create Slides**: Click on 'Slides' in the left-hand menu, and then click on 'Add New'. Give your slide a title, set a featured image (this will be the image for the slide), and enter the ID of the slider you created in the 'Slider ID' meta box. Click 'Publish' to create the slide. Repeat this step for each slide you want to add to the slider.
+4. **Add the Slider to a Page**: To add the slider to a page, you need to use the `[mslider id="x"]` shortcode, where 'x' is the ID of the slider. You can add this shortcode to the content of any page or post, or you can add it to a text widget in a widget area.
 
-- `effect`: The transition effect. Can be `slide`, `fade`, `cube`, `coverflow`, or `flip`.
-- `speed`: The transition speed in milliseconds.
-- `delay`: The delay between transitions in milliseconds.
+## Author
 
-Example:
-
-```php
-[mslider]
-
+MSlider is developed by [Medhat Alkadri](https://medhatalkadry.com).

@@ -2,7 +2,7 @@
 /*
 Plugin Name: MSlider
 Description: A simple image slider plugin
-Version: 1.4
+Version: 2
 Author: Medhat Alkadri
 Author URI: https://medhatalkadry.com
 */
